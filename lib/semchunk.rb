@@ -378,41 +378,47 @@ module Semchunk
     def split_text(text)
       splitter_is_whitespace = true
 
-      # Try splitting at various levels
-      if text.include?("\n") || text.include?("\r")
-        newline_matches = text.scan(/[\r\n]+/)
-        splitter = newline_matches.max_by(&:length)
-      elsif text.include?("\t")
-        tab_matches = text.scan(/\t+/)
-        splitter = tab_matches.max_by(&:length)
-      elsif text.match?(/\s/)
-        whitespace_matches = text.scan(/\s+/)
-        splitter = whitespace_matches.max_by(&:length)
+      splitter = find_whitespace_splitter(text)
+      if splitter
+        result = try_whitespace_with_semantic_preceder(text, splitter, splitter_is_whitespace)
+        return result if result
 
-        # If the splitter is only a single character, see if we can target whitespace preceded by semantic splitters
-        if splitter.length == 1
-          NON_WHITESPACE_SEMANTIC_SPLITTERS.each do |preceder|
-            escaped_preceder = Regexp.escape(preceder)
-            next unless (match = text.match(/#{escaped_preceder}(\s)/))
-
-            splitter = match[1]
-            escaped_splitter = Regexp.escape(splitter)
-            return [splitter, splitter_is_whitespace, text.split(/(?<=#{escaped_preceder})#{escaped_splitter}/)]
-          end
-        end
-      else
-        # Find the most desirable semantically meaningful non-whitespace splitter
-        splitter = NON_WHITESPACE_SEMANTIC_SPLITTERS.find { |s| text.include?(s) }
-
-        return ["", splitter_is_whitespace, text.chars] unless splitter
-
-        splitter_is_whitespace = false
-
-        # No semantic splitter found, return characters
-
+        return [splitter, splitter_is_whitespace, text.split(splitter)]
       end
 
-      [splitter, splitter_is_whitespace, text.split(splitter)]
+      # No whitespace found, use non-whitespace semantic splitters
+      find_non_whitespace_splitter(text)
+    end
+
+    def find_whitespace_splitter(text)
+      return text.scan(/[\r\n]+/).max_by(&:length) if text.include?("\n") || text.include?("\r")
+      return text.scan(/\t+/).max_by(&:length) if text.include?("\t")
+      return text.scan(/\s+/).max_by(&:length) if text.match?(/\s/)
+
+      nil
+    end
+
+    def try_whitespace_with_semantic_preceder(text, splitter, splitter_is_whitespace)
+      return nil unless splitter.length == 1
+
+      NON_WHITESPACE_SEMANTIC_SPLITTERS.each do |preceder|
+        escaped_preceder = Regexp.escape(preceder)
+        match = text.match(/#{escaped_preceder}(\s)/)
+        next unless match
+
+        matched_splitter = match[1]
+        escaped_splitter = Regexp.escape(matched_splitter)
+        return [matched_splitter, splitter_is_whitespace, text.split(/(?<=#{escaped_preceder})#{escaped_splitter}/)]
+      end
+
+      nil
+    end
+
+    def find_non_whitespace_splitter(text)
+      splitter = NON_WHITESPACE_SEMANTIC_SPLITTERS.find { |s| text.include?(s) }
+      return ["", true, text.chars] unless splitter
+
+      [splitter, false, text.split(splitter)]
     end
 
     def bisect_left(sorted, target, low, high)

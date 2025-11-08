@@ -52,7 +52,8 @@ Layout/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
 
 Metrics/AbcSize:
-  Enabled: false
+  Enabled: true
+  Max: 30
   Exclude:
     - "test/**/*"
 
@@ -77,10 +78,12 @@ Metrics/ParameterLists:
   Max: 10
 
 Metrics/PerceivedComplexity:
-  Enabled: false
+  Enabled: true
+  Max: 10
 
 Metrics/CyclomaticComplexity:
-  Enabled: false
+  Enabled: true
+  Max: 10
 
 Minitest/EmptyLineBeforeAssertionMethods:
   Enabled: false
