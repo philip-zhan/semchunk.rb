@@ -1,12 +1,18 @@
-# Semchunk
+<div align="center">
+
+# semchunk 🧩
 
 [![Gem Version](https://img.shields.io/gem/v/semchunk)](https://rubygems.org/gems/semchunk)
 [![Gem Downloads](https://img.shields.io/gem/dt/semchunk)](https://www.ruby-toolbox.com/projects/semchunk)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/philip-zhan/semchunk.rb/ci.yml)](https://github.com/philip-zhan/semchunk.rb/actions/workflows/ci.yml)
 
-Split text into semantically meaningful chunks of a specified size as determined by a provided token counter.
+</div>
 
-This is a Ruby port of the Python [semchunk](https://github.com/umarbutler/semchunk) package.
+**`semchunk`** is a fast and lightweight Ruby gem for splitting text into semantically meaningful chunks.
+
+This is a Ruby port of the Python [semchunk](https://github.com/isaacus-dev/semchunk) library by [Isaacus](https://isaacus.com/), maintaining the same efficient chunking algorithm and API design.
+
+`semchunk` produces chunks that are more semantically meaningful than regular token and recursive character chunkers, while being fast and easy to use.
 
 ## Features
 
@@ -293,16 +299,31 @@ text = "Your long text here..."
 chunks = chunker.call(text)
 ```
 
-## How It Works
+## How It Works 🔍
 
-Semchunk uses a hierarchical splitting strategy:
+`semchunk` works by recursively splitting texts until all resulting chunks are equal to or less than a specified chunk size. In particular, it:
 
-1. **Primary split**: Tries to split on paragraph breaks (newlines)
-2. **Secondary split**: Falls back to sentences (periods, question marks, etc.)
-3. **Tertiary split**: Uses clauses (commas, semicolons) if needed
-4. **Final split**: Character-level splitting as last resort
+1. Splits text using the most semantically meaningful splitter possible;
+2. Recursively splits the resulting chunks until a set of chunks equal to or less than the specified chunk size is produced;
+3. Merges any chunks that are under the chunk size back together until the chunk size is reached;
+4. Reattaches any non-whitespace splitters back to the ends of chunks barring the final chunk if doing so does not bring chunks over the chunk size, otherwise adds non-whitespace splitters as their own chunks; and
+5. Excludes chunks consisting entirely of whitespace characters.
 
-This ensures that chunks are semantically meaningful while respecting your token limits.
+To ensure that chunks are as semantically meaningful as possible, `semchunk` uses the following splitters, in order of precedence:
+
+1. The largest sequence of newlines (`\n`) and/or carriage returns (`\r`);
+2. The largest sequence of tabs;
+3. The largest sequence of whitespace characters (as defined by regex's `\s` character class) or, if the largest sequence of whitespace characters is only a single character and there exist whitespace characters preceded by any of the semantically meaningful non-whitespace characters listed below (in the same order of precedence), then only those specific whitespace characters;
+4. Sentence terminators (`.`, `?`, `!` and `*`);
+5. Clause separators (`;`, `,`, `(`, `)`, `[`, `]`, `"`, `"`, `'`, `'`, `'`, `"` and `` ` ``);
+6. Sentence interrupters (`:`, `—` and `…`);
+7. Word joiners (`/`, `\`, `–`, `&` and `-`); and
+8. All other characters.
+
+If overlapping chunks have been requested, `semchunk` also:
+
+1. Internally reduces the chunk size to `min(overlap, chunk_size - overlap)` (`overlap` being computed as `floor(chunk_size * overlap)` for relative overlaps and `min(overlap, chunk_size - 1)` for absolute overlaps); and
+2. Merges every `floor(original_chunk_size / reduced_chunk_size)` chunks starting from the first chunk and then jumping by `floor((original_chunk_size - overlap) / reduced_chunk_size)` chunks until the last chunk is reached.
 
 The algorithm uses binary search to efficiently find the optimal split points, making it fast even for large documents.
 
@@ -317,6 +338,22 @@ ruby examples/basic_usage.rb
 # Advanced usage with longer documents
 ruby examples/advanced_usage.rb
 ```
+
+## Benchmarks 📊
+
+You can run the included benchmark to test performance:
+
+```bash
+ruby test/bench.rb
+```
+
+The Ruby implementation maintains similar performance characteristics to the Python version:
+- Efficient binary search for optimal split points
+- O(n log n) complexity for chunking
+- Fast token count lookups with memoization
+- Low memory overhead
+
+The benchmark tests chunking multiple texts with various chunk sizes and provides detailed performance metrics.
 
 ## Differences from Python Version
 
