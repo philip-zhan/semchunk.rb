@@ -187,8 +187,7 @@ module Semchunk
           skips,
           token_counter,
           local_chunk_size,
-          split_start,
-          splitter_len
+          split_start
         )
       end
 
@@ -207,12 +206,13 @@ module Semchunk
     end
 
     def append_splitter_if_needed(chunks, offsets_arr, splitter, splitter_is_whitespace,
-                                  i, splits, skips, token_counter, local_chunk_size,
-                                  split_start, splitter_len)
+                                  split_index, splits, skips, token_counter, local_chunk_size,
+                                  split_start)
       return if splitter_is_whitespace
-      return if i == splits.length - 1
-      return if ((i + 1)...splits.length).all? { |j| skips.include?(j) }
+      return if split_index == splits.length - 1
+      return if ((split_index + 1)...splits.length).all? { |j| skips.include?(j) }
 
+      splitter_len = splitter.length
       last_chunk_with_splitter = chunks[-1] + splitter
       if token_counter.call(last_chunk_with_splitter) <= local_chunk_size
         chunks[-1] = last_chunk_with_splitter
