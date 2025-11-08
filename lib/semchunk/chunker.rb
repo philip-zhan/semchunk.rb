@@ -16,21 +16,18 @@ module Semchunk
     #
     # @param text_or_texts [String, Array<String>] The text or texts to be chunked
     # @param processes [Integer] The number of processes to use when chunking multiple texts (not yet implemented)
-    # @param progress [Boolean] Whether to display a progress bar when chunking multiple texts (not yet implemented)
     # @param offsets [Boolean] Whether to return the start and end offsets of each chunk
     # @param overlap [Float, Integer, nil] The proportion of the chunk size, or, if >=1, the number of tokens, by which chunks should overlap
     #
     # @return [Array<String>, Array<Array>, Hash] Depending on the input and options, returns chunks and optionally offsets
-    def call(text_or_texts, processes: 1, progress: false, offsets: false, overlap: nil)
+    def call(text_or_texts, processes: 1, offsets: false, overlap: nil)
       chunk_function = make_chunk_function(offsets: offsets, overlap: overlap)
 
       # Handle single text
       return chunk_function.call(text_or_texts) if text_or_texts.is_a?(String)
 
       # Handle multiple texts
-      unless processes == 1
-        raise NotImplementedError, "Parallel processing not yet implemented. Please use processes: 1"
-      end
+      raise NotImplementedError, "Parallel processing not yet implemented. Please use processes: 1" unless processes == 1
 
       # TODO: Add progress bar support
       chunks_and_offsets = text_or_texts.map { |text| chunk_function.call(text) }

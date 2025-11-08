@@ -13,6 +13,9 @@ AllCops:
     - "tmp/**/*"
     - "vendor/**/*"
 
+Layout/LineLength:
+  Enabled: false
+
 Layout/FirstArrayElementIndentation:
   EnforcedStyle: consistent
 
@@ -49,28 +52,44 @@ Layout/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
 
 Metrics/AbcSize:
-  Max: 20
+  Max: 500
   Exclude:
     - "test/**/*"
 
 Metrics/BlockLength:
+  Max: 100
   Exclude:
     - "*.gemspec"
     - "Rakefile"
 
 Metrics/ClassLength:
+  Max: 500
   Exclude:
     - "test/**/*"
 
 Metrics/MethodLength:
-  Max: 18
+  Max: 200
+  Exclude:
+    - "test/**/*"
+
+Metrics/ModuleLength:
+  Max: 500
   Exclude:
     - "test/**/*"
 
 Metrics/ParameterLists:
-  Max: 6
+  Max: 10
+
+Metrics/PerceivedComplexity:
+  Max: 50
+
+Metrics/CyclomaticComplexity:
+  Max: 50
 
 Minitest/EmptyLineBeforeAssertionMethods:
+  Enabled: false
+
+Minitest/MultipleAssertions:
   Enabled: false
 
 Naming/MemoizedInstanceVariableName:

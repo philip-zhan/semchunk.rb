@@ -205,9 +205,7 @@ module Semchunk
 
       # Determine chunk_size if not provided
       if chunk_size.nil?
-        unless tokenizer_or_token_counter.respond_to?(:model_max_length) && tokenizer_or_token_counter.model_max_length.is_a?(Integer)
-          raise ArgumentError, "chunk_size not provided and tokenizer lacks model_max_length attribute"
-        end
+        raise ArgumentError, "chunk_size not provided and tokenizer lacks model_max_length attribute" unless tokenizer_or_token_counter.respond_to?(:model_max_length) && tokenizer_or_token_counter.model_max_length.is_a?(Integer)
 
         chunk_size = tokenizer_or_token_counter.model_max_length
 
@@ -264,8 +262,6 @@ module Semchunk
       Chunker.new(chunk_size: chunk_size, token_counter: token_counter)
     end
 
-    private
-
     # A tuple of semantically meaningful non-whitespace splitters
     NON_WHITESPACE_SEMANTIC_SPLITTERS = [
       # Sentence terminators
@@ -297,6 +293,8 @@ module Semchunk
       "&",
       "-"
     ].freeze
+
+    private
 
     def split_text(text)
       splitter_is_whitespace = true
