@@ -8,7 +8,7 @@ Gem::Specification.new do |spec|
   spec.authors = ["Philip Zhan"]
   spec.email = ["h6zhan@gmail.com"]
 
-  spec.summary = "Split text into semantically meaningful chunks"
+  spec.summary = "Split text into semantically meaningful chunks. Ported from the Python `semchunk` package."
   spec.homepage = "https://github.com/philip-zhan/semchunk.rb"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1"
