@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/semchunk"
+require "semchunk"
 require "benchmark"
 
 # Benchmark configuration
@@ -39,7 +39,7 @@ SAMPLE_TEXTS = [
     of despair.
   TEXT
   # Frankenstein excerpt
-  <<~TEXT,
+  <<~TEXT
     You will rejoice to hear that no disaster has accompanied the commencement of an enterprise
     which you have regarded with such evil forebodings. I arrived here yesterday, and my first
     task is to assure my dear sister of my welfare and increasing confidence in the success of
@@ -89,7 +89,7 @@ def run_benchmark
   puts "  Chunks per second: #{(SAMPLE_TEXTS.length / average_time).round(0)}"
 
   # Show sample output
-  puts "\n" + "=" * 70
+  puts "\n#{'=' * 70}"
   puts "Sample Output (first text):"
   puts "=" * 70
 
@@ -108,7 +108,7 @@ def run_benchmark
   end
 
   # Memory usage test
-  puts "\n" + "=" * 70
+  puts "\n#{'=' * 70}"
   puts "Memory Efficiency Test"
   puts "=" * 70
 
@@ -125,11 +125,9 @@ def run_benchmark
   puts "  Chunks created: #{chunks_large.length}"
   puts "  Average chunk size: #{chunks_large.sum(&:length) / chunks_large.length} characters"
 
-  puts "\n" + "=" * 70
+  puts "\n#{'=' * 70}"
   puts "Benchmark completed!"
   puts "=" * 70
 end
 
-if __FILE__ == $PROGRAM_NAME
-  run_benchmark
-end
+run_benchmark if __FILE__ == $PROGRAM_NAME

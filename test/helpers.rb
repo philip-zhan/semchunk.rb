@@ -6,11 +6,11 @@ module TestHelpers
   DETERMINISTIC_TEST_INPUT = "ThisIs\tATest."
   DETERMINISTIC_TEST_CHUNK_SIZE = 4
 
-  # Note: The Ruby implementation may handle trailing punctuation slightly differently than Python
+  # NOTE: The Ruby implementation may handle trailing punctuation slightly differently than Python
   # in some edge cases with character-level tokenization
   DETERMINISTIC_TEST_OUTPUT_CHUNKS = {
     "word" => ["ThisIs\tATest."],
-    "char" => ["This", "Is", "ATes", "t"]
+    "char" => %w[This Is ATes t]
   }.freeze
 
   DETERMINISTIC_TEST_OUTPUT_OFFSETS = {
@@ -45,19 +45,17 @@ module TestHelpers
   def self.initialize_test_token_counters
     {
       "word" => ->(text) { text.split.length },
-      "char" => ->(text) { text.length }
+      "char" => lambda(&:length)
     }
   end
 
   # Test that chunks satisfy basic invariants
-  def self.verify_chunks(chunks, text, chunk_size, token_counter)
+  def self.verify_chunks(chunks, _text, chunk_size, token_counter)
     # All chunks should be within size limit
     chunks.each do |chunk|
       raise "Chunk exceeds size: #{token_counter.call(chunk)} > #{chunk_size}" if token_counter.call(chunk) > chunk_size
-    end
 
-    # No chunk should be empty or all whitespace
-    chunks.each do |chunk|
+      # No chunk should be empty or all whitespace
       raise "Empty or whitespace-only chunk found" if chunk.empty? || chunk.strip.empty?
     end
   end

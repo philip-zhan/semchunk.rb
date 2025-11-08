@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/semchunk"
+require "semchunk"
 
 # Advanced Example: Processing a longer document with various features
 
@@ -45,14 +45,14 @@ def advanced_token_counter(text)
 end
 
 puts "\nDocument Preview:"
-puts document[0..200] + "..."
+puts "#{document[0..200]}..."
 puts "\nDocument statistics:"
 puts "  - Total characters: #{document.length}"
 puts "  - Total tokens: #{advanced_token_counter(document)}"
 puts "  - Lines: #{document.lines.count}"
 
 # Example 1: Basic semantic chunking
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Example 1: Semantic Chunking (max 50 tokens per chunk)"
 puts "=" * 70
 
@@ -65,14 +65,14 @@ chunks = Semchunk.chunk(
 puts "\nCreated #{chunks.length} chunks:"
 chunks.each_with_index do |chunk, i|
   token_count = advanced_token_counter(chunk)
-  preview = chunk.gsub(/\s+/, ' ').strip[0..60]
+  preview = chunk.gsub(/\s+/, " ").strip[0..60]
   preview += "..." if chunk.length > 60
   puts "\n  Chunk #{i + 1} (#{token_count} tokens):"
   puts "    #{preview}"
 end
 
 # Example 2: With overlap for context preservation
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Example 2: Overlapping Chunks (30% overlap)"
 puts "=" * 70
 
@@ -91,18 +91,18 @@ overlapping_chunks.take(3).each_with_index do |chunk, i|
   puts "    #{chunk.gsub(/\s+/, ' ').strip[0..80]}..."
 
   # Show overlap with next chunk
-  if i < overlapping_chunks.length - 1
-    next_chunk = overlapping_chunks[i + 1]
-    # Find common words
-    current_words = chunk.downcase.scan(/\w+/)
-    next_words = next_chunk.downcase.scan(/\w+/)
-    overlap_words = current_words & next_words
-    puts "    → Overlaps with next chunk: #{overlap_words.length} common words"
-  end
+  next unless i < overlapping_chunks.length - 1
+
+  next_chunk = overlapping_chunks[i + 1]
+  # Find common words
+  current_words = chunk.downcase.scan(/\w+/)
+  next_words = next_chunk.downcase.scan(/\w+/)
+  overlap_words = current_words & next_words
+  puts "    → Overlaps with next chunk: #{overlap_words.length} common words"
 end
 
 # Example 3: Tracking source locations with offsets
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Example 3: Tracking Source Locations"
 puts "=" * 70
 
@@ -131,7 +131,7 @@ chunks_with_offsets.each_with_index do |chunk, i|
 end
 
 # Example 4: Using Chunkerify for multiple documents
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Example 4: Processing Multiple Documents"
 puts "=" * 70
 
@@ -161,7 +161,7 @@ all_chunks.each_with_index do |doc_chunks, i|
 end
 
 # Example 5: Custom chunking strategy for code-like text
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Example 5: Custom Strategy for Structured Text"
 puts "=" * 70
 
@@ -187,7 +187,7 @@ line_counter = ->(text) { text.lines.count }
 
 chunks_code = Semchunk.chunk(
   code_like_text,
-  chunk_size: 3,  # Max 3 lines per chunk
+  chunk_size: 3, # Max 3 lines per chunk
   token_counter: line_counter
 )
 
@@ -198,7 +198,7 @@ chunks_code.each_with_index do |chunk, i|
 end
 
 # Summary statistics
-puts "\n" + "=" * 70
+puts "\n#{'=' * 70}"
 puts "Session Summary"
 puts "=" * 70
 

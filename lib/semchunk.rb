@@ -23,7 +23,8 @@ module Semchunk
     # @param start [Integer] Internal parameter for tracking character offset.
     #
     # @return [Array<String>, Array<Array>] A list of chunks up to chunk_size-tokens-long, with any whitespace used to split the text removed, and, if offsets is true, a list of tuples [start, end].
-    def chunk(text, chunk_size:, token_counter:, memoize: true, offsets: false, overlap: nil, cache_maxsize: nil, recursion_depth: 0, start: 0)
+    def chunk(text, chunk_size:, token_counter:, memoize: true, offsets: false, overlap: nil, cache_maxsize: nil,
+              recursion_depth: 0, start: 0)
       # Rename variables for clarity
       return_offsets = offsets
       local_chunk_size = chunk_size
@@ -32,9 +33,7 @@ module Semchunk
       is_first_call = recursion_depth.zero?
 
       if is_first_call
-        if memoize
-          token_counter = memoize_token_counter(token_counter, cache_maxsize)
-        end
+        token_counter = memoize_token_counter(token_counter, cache_maxsize) if memoize
 
         if overlap
           # Make relative overlaps absolute and floor both relative and absolute overlaps
@@ -59,11 +58,11 @@ module Semchunk
       splitter_len = splitter.length
       split_lens = splits.map(&:length)
       cum_lens = [0]
-      split_lens.each { |len| cum_lens << cum_lens.last + len }
+      split_lens.each { |len| cum_lens << (cum_lens.last + len) }
 
       split_starts = [0]
       split_lens.each_with_index do |split_len, i|
-        split_starts << split_starts[i] + split_len + splitter_len
+        split_starts << (split_starts[i] + split_len + splitter_len)
       end
       split_starts = split_starts.map { |s| s + start }
 
@@ -116,17 +115,19 @@ module Semchunk
         end
 
         # If the splitter is not whitespace and the split is not the last split, add the splitter to the end of the latest chunk
-        unless splitter_is_whitespace || (i == splits.length - 1 || ((i + 1)...splits.length).all? { |j| skips.include?(j) })
-          last_chunk_with_splitter = chunks[-1] + splitter
-          if token_counter.call(last_chunk_with_splitter) <= local_chunk_size
-            chunks[-1] = last_chunk_with_splitter
-            offset_start, offset_end = offsets_arr[-1]
-            offsets_arr[-1] = [offset_start, offset_end + splitter_len]
-          else
-            offset_start = offsets_arr.empty? ? split_start : offsets_arr[-1][1]
-            chunks << splitter
-            offsets_arr << [offset_start, offset_start + splitter_len]
-          end
+        next if splitter_is_whitespace || (i == splits.length - 1 || ((i + 1)...splits.length).all? do |j|
+          skips.include?(j)
+        end)
+
+        last_chunk_with_splitter = chunks[-1] + splitter
+        if token_counter.call(last_chunk_with_splitter) <= local_chunk_size
+          chunks[-1] = last_chunk_with_splitter
+          offset_start, offset_end = offsets_arr[-1]
+          offsets_arr[-1] = [offset_start, offset_end + splitter_len]
+        else
+          offset_start = offsets_arr.empty? ? split_start : offsets_arr[-1][1]
+          chunks << splitter
+          offsets_arr << [offset_start, offset_start + splitter_len]
         end
       end
 
@@ -143,7 +144,7 @@ module Semchunk
         end
 
         # Overlap chunks if desired and there are chunks to overlap
-        if overlap && overlap.positive? && chunks.any?
+        if overlap&.positive? && chunks.any?
           # Rename variables for clarity
           subchunk_size = local_chunk_size
           subchunks = chunks
@@ -187,7 +188,8 @@ module Semchunk
     def chunkerify(tokenizer_or_token_counter, chunk_size: nil, max_token_chars: nil, memoize: true, cache_maxsize: nil)
       # Handle string tokenizer names (would require tiktoken/transformers Ruby equivalents)
       if tokenizer_or_token_counter.is_a?(String)
-        raise NotImplementedError, "String tokenizer names not yet supported in Ruby. Please pass a tokenizer object or token counter proc."
+        raise NotImplementedError,
+              "String tokenizer names not yet supported in Ruby. Please pass a tokenizer object or token counter proc."
       end
 
       # Determine max_token_chars if not provided
@@ -203,28 +205,33 @@ module Semchunk
 
       # Determine chunk_size if not provided
       if chunk_size.nil?
-        if tokenizer_or_token_counter.respond_to?(:model_max_length) && tokenizer_or_token_counter.model_max_length.is_a?(Integer)
-          chunk_size = tokenizer_or_token_counter.model_max_length
-
-          # Attempt to reduce the chunk size by the number of special characters
-          if tokenizer_or_token_counter.respond_to?(:encode)
-            begin
-              chunk_size -= tokenizer_or_token_counter.encode("").length
-            rescue StandardError
-              # Ignore errors
-            end
-          end
-        else
+        unless tokenizer_or_token_counter.respond_to?(:model_max_length) && tokenizer_or_token_counter.model_max_length.is_a?(Integer)
           raise ArgumentError, "chunk_size not provided and tokenizer lacks model_max_length attribute"
         end
+
+        chunk_size = tokenizer_or_token_counter.model_max_length
+
+        # Attempt to reduce the chunk size by the number of special characters
+        if tokenizer_or_token_counter.respond_to?(:encode)
+          begin
+            chunk_size -= tokenizer_or_token_counter.encode("").length
+          rescue StandardError
+            # Ignore errors
+          end
+        end
+
       end
 
       # Construct token counter from tokenizer if needed
       if tokenizer_or_token_counter.respond_to?(:encode)
         tokenizer = tokenizer_or_token_counter
         # Check if encode accepts add_special_tokens parameter
-        encode_params = tokenizer.method(:encode).parameters rescue []
-        has_special_tokens = encode_params.any? { |type, name| name == :add_special_tokens }
+        encode_params = begin
+          tokenizer.method(:encode).parameters
+        rescue StandardError
+          []
+        end
+        has_special_tokens = encode_params.any? { |_type, name| name == :add_special_tokens }
 
         token_counter = if has_special_tokens
                           ->(text) { tokenizer.encode(text, add_special_tokens: false).length }
@@ -251,9 +258,7 @@ module Semchunk
       end
 
       # Memoize the token counter if necessary
-      if memoize
-        token_counter = memoize_token_counter(token_counter, cache_maxsize)
-      end
+      token_counter = memoize_token_counter(token_counter, cache_maxsize) if memoize
 
       # Construct and return the chunker
       Chunker.new(chunk_size: chunk_size, token_counter: token_counter)
@@ -264,13 +269,33 @@ module Semchunk
     # A tuple of semantically meaningful non-whitespace splitters
     NON_WHITESPACE_SEMANTIC_SPLITTERS = [
       # Sentence terminators
-      ".", "?", "!", "*",
+      ".",
+      "?",
+      "!",
+      "*",
       # Clause separators
-      ";", ",", "(", ")", "[", "]", """, """, "'", "'", "'", '"', "`",
+      ";",
+      ",",
+      "(",
+      ")",
+      "[",
+      "]",
+      ", ",
+      "'",
+      "'",
+      "'",
+      '"',
+      "`",
       # Sentence interrupters
-      ":", "—", "…",
+      ":",
+      "—",
+      "…",
       # Word joiners
-      "/", "\\", "–", "&", "-"
+      "/",
+      "\\",
+      "–",
+      "&",
+      "-"
     ].freeze
 
     def split_text(text)
@@ -291,23 +316,23 @@ module Semchunk
         if splitter.length == 1
           NON_WHITESPACE_SEMANTIC_SPLITTERS.each do |preceder|
             escaped_preceder = Regexp.escape(preceder)
-            if (match = text.match(/#{escaped_preceder}(\s)/))
-              splitter = match[1]
-              escaped_splitter = Regexp.escape(splitter)
-              return [splitter, splitter_is_whitespace, text.split(/(?<=#{escaped_preceder})#{escaped_splitter}/)]
-            end
+            next unless (match = text.match(/#{escaped_preceder}(\s)/))
+
+            splitter = match[1]
+            escaped_splitter = Regexp.escape(splitter)
+            return [splitter, splitter_is_whitespace, text.split(/(?<=#{escaped_preceder})#{escaped_splitter}/)]
           end
         end
       else
         # Find the most desirable semantically meaningful non-whitespace splitter
         splitter = NON_WHITESPACE_SEMANTIC_SPLITTERS.find { |s| text.include?(s) }
 
-        if splitter
-          splitter_is_whitespace = false
-        else
-          # No semantic splitter found, return characters
-          return ["", splitter_is_whitespace, text.chars]
-        end
+        return ["", splitter_is_whitespace, text.chars] unless splitter
+
+        splitter_is_whitespace = false
+
+        # No semantic splitter found, return characters
+
       end
 
       [splitter, splitter_is_whitespace, text.split(splitter)]
@@ -356,7 +381,7 @@ module Semchunk
       [last_split_index, splits[start...last_split_index].join(splitter)]
     end
 
-    def memoize_token_counter(token_counter, maxsize = nil)
+    def memoize_token_counter(token_counter, maxsize=nil)
       return @memoized_token_counters[token_counter] if @memoized_token_counters.key?(token_counter)
 
       cache = {}

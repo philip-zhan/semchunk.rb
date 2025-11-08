@@ -13,9 +13,9 @@ class ComprehensiveTest < Minitest::Test
   end
 
   def test_comprehensive_chunking
-    @token_counters.each do |name, token_counter|
+    @token_counters.each_value do |token_counter|
       TEST_CHUNK_SIZES.each do |chunk_size|
-        TestHelpers::SAMPLE_TEXTS.each_with_index do |sample, idx|
+        TestHelpers::SAMPLE_TEXTS.each_with_index do |sample, _idx|
           # Test basic chunking
           chunker = Semchunk.chunkerify(token_counter, chunk_size: chunk_size)
           chunks = chunker.call(sample)
@@ -31,16 +31,20 @@ class ComprehensiveTest < Minitest::Test
           # yields a close approximation (minor differences in punctuation handling are acceptable)
           lowercased_no_whitespace = sample.downcase.gsub(/\s+/, "")
 
-          chunks_lwn, offsets_lwn = chunker.call(lowercased_no_whitespace, offsets: true)
+          chunks_lwn, = chunker.call(lowercased_no_whitespace, offsets: true)
           joined = chunks_lwn.join
           # Allow for minor differences in trailing punctuation
-          assert joined.length >= (lowercased_no_whitespace.length * 0.95),
-                 "Joined chunks too short: #{joined.length} vs #{lowercased_no_whitespace.length}"
+          assert_operator joined.length,
+                          :>=,
+                          (lowercased_no_whitespace.length * 0.95),
+                          "Joined chunks too short: #{joined.length} vs #{lowercased_no_whitespace.length}"
 
           chunks_lwn = chunker.call(lowercased_no_whitespace)
           joined = chunks_lwn.join
-          assert joined.length >= (lowercased_no_whitespace.length * 0.95),
-                 "Joined chunks too short: #{joined.length} vs #{lowercased_no_whitespace.length}"
+          assert_operator joined.length,
+                          :>=,
+                          (lowercased_no_whitespace.length * 0.95),
+                          "Joined chunks too short: #{joined.length} vs #{lowercased_no_whitespace.length}"
         end
       end
     end
@@ -78,8 +82,10 @@ class ComprehensiveTest < Minitest::Test
       if name == "word"
         assert_equal low_overlap_chunks.length, high_overlap_chunks.length
       else
-        assert high_overlap_chunks.length > low_overlap_chunks.length,
-               "High overlap should produce more chunks for #{name}"
+        assert_operator high_overlap_chunks.length,
+                        :>,
+                        low_overlap_chunks.length,
+                        "High overlap should produce more chunks for #{name}"
       end
 
       # Test with offsets
@@ -98,13 +104,13 @@ class ComprehensiveTest < Minitest::Test
         assert_equal low_overlap_chunks_o.length, high_overlap_chunks_o.length
         assert_equal low_overlap_offsets.length, high_overlap_offsets.length
       else
-        assert high_overlap_chunks_o.length > low_overlap_chunks_o.length
-        assert high_overlap_offsets.length > low_overlap_offsets.length
+        assert_operator high_overlap_chunks_o.length, :>, low_overlap_chunks_o.length
+        assert_operator high_overlap_offsets.length, :>, low_overlap_offsets.length
       end
 
       # Verify offsets match extracted text
       text = TestHelpers::DETERMINISTIC_TEST_INPUT
-      assert_equal high_overlap_chunks_o, high_overlap_offsets.map { |s, e| text[s...e] }
+      assert_equal(high_overlap_chunks_o, high_overlap_offsets.map { |s, e| text[s...e] })
     end
   end
 
@@ -171,15 +177,15 @@ class ComprehensiveTest < Minitest::Test
   end
 
   def test_empty_text_handling
-    token_counter = ->(text) { 0 }
+    token_counter = ->(_text) { 0 }
 
     # Test chunking nothing to ensure no errors are raised
     chunks = Semchunk.chunk("", chunk_size: 512, token_counter: token_counter)
-    assert_equal [], chunks
+    assert_empty chunks
 
     # Test chunking whitespace to ensure no errors are raised
     chunks = Semchunk.chunk("\n\n", chunk_size: 512, token_counter: token_counter)
-    assert_equal [], chunks
+    assert_empty chunks
   end
 
   def test_large_text_performance
@@ -194,7 +200,7 @@ class ComprehensiveTest < Minitest::Test
     duration = Time.now - start_time
 
     # Should complete in reasonable time (< 1 second for this size)
-    assert duration < 1.0, "Chunking took too long: #{duration}s"
+    assert_operator duration, :<, 1.0, "Chunking took too long: #{duration}s"
 
     # Verify results
     TestHelpers.verify_chunks(chunks, large_text, 100, token_counter)
@@ -229,7 +235,7 @@ class ComprehensiveTest < Minitest::Test
 
     # Test with overlap = 1 (1 token overlap)
     chunks_one_token = Semchunk.chunk(text, chunk_size: 4, token_counter: token_counter, overlap: 1)
-    assert chunks_one_token.length >= chunks_no_overlap.length
+    assert_operator chunks_one_token.length, :>=, chunks_no_overlap.length
 
     # Test with large overlap (should be capped)
     chunks_large_overlap = Semchunk.chunk(text, chunk_size: 4, token_counter: token_counter, overlap: 10)
@@ -256,6 +262,6 @@ class ComprehensiveTest < Minitest::Test
     second_count = call_count
 
     # Should have made some calls but potentially fewer on second run
-    assert second_count >= first_count
+    assert_operator second_count, :>=, first_count
   end
 end

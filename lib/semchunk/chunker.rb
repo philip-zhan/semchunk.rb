@@ -25,18 +25,17 @@ module Semchunk
       chunk_function = make_chunk_function(offsets: offsets, overlap: overlap)
 
       # Handle single text
-      if text_or_texts.is_a?(String)
-        return chunk_function.call(text_or_texts)
-      end
+      return chunk_function.call(text_or_texts) if text_or_texts.is_a?(String)
 
       # Handle multiple texts
-      if processes == 1
-        # TODO: Add progress bar support
-        chunks_and_offsets = text_or_texts.map { |text| chunk_function.call(text) }
-      else
-        # TODO: Add parallel processing support
+      unless processes == 1
         raise NotImplementedError, "Parallel processing not yet implemented. Please use processes: 1"
       end
+
+      # TODO: Add progress bar support
+      chunks_and_offsets = text_or_texts.map { |text| chunk_function.call(text) }
+
+      # TODO: Add parallel processing support
 
       # Return results
       if offsets

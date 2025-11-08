@@ -14,7 +14,7 @@ class SemchunkTest < Minitest::Test
     chunks = Semchunk.chunk(text, chunk_size: 5, token_counter: token_counter)
 
     assert_kind_of Array, chunks
-    assert chunks.all? { |chunk| chunk.is_a?(String) }
+    assert(chunks.all?(String))
     refute_empty chunks
   end
 
@@ -42,7 +42,7 @@ class SemchunkTest < Minitest::Test
     chunks = Semchunk.chunk(text, chunk_size: 4, token_counter: token_counter, overlap: 0.5)
 
     assert_kind_of Array, chunks
-    assert chunks.length > 1
+    assert_operator chunks.length, :>, 1
   end
 
   def test_split_text_with_newlines
@@ -72,7 +72,7 @@ class SemchunkTest < Minitest::Test
     chunks = Semchunk.chunk(text, chunk_size: 3, token_counter: token_counter)
 
     assert_kind_of Array, chunks
-    assert chunks.length >= 2
+    assert_operator chunks.length, :>=, 2
   end
 
   def test_empty_text
@@ -81,7 +81,7 @@ class SemchunkTest < Minitest::Test
 
     chunks = Semchunk.chunk(text, chunk_size: 10, token_counter: token_counter)
 
-    assert_equal [], chunks
+    assert_empty chunks
   end
 
   def test_whitespace_only_text
@@ -90,7 +90,7 @@ class SemchunkTest < Minitest::Test
 
     chunks = Semchunk.chunk(text, chunk_size: 10, token_counter: token_counter)
 
-    assert_equal [], chunks
+    assert_empty chunks
   end
 
   def test_text_longer_than_chunk_size
@@ -100,9 +100,9 @@ class SemchunkTest < Minitest::Test
     chunks = Semchunk.chunk(text, chunk_size: 10, token_counter: token_counter)
 
     assert_kind_of Array, chunks
-    assert chunks.length > 1
+    assert_operator chunks.length, :>, 1
     chunks.each do |chunk|
-      assert token_counter.call(chunk) <= 10
+      assert_operator token_counter.call(chunk), :<=, 10
     end
   end
 
@@ -122,7 +122,7 @@ class SemchunkTest < Minitest::Test
     Semchunk.chunk(text, chunk_size: 10, token_counter: token_counter, memoize: true)
 
     # The second call should have fewer or equal calls due to memoization
-    assert call_count >= first_count
+    assert_operator call_count, :>=, first_count
   end
 
   def test_chunkerify_with_proc
@@ -149,7 +149,7 @@ class SemchunkTest < Minitest::Test
     chunks = chunker.call(text)
 
     assert_kind_of Array, chunks
-    assert chunks.all? { |chunk| chunk.is_a?(String) }
+    assert(chunks.all?(String))
   end
 
   def test_chunker_call_with_multiple_texts
@@ -166,7 +166,7 @@ class SemchunkTest < Minitest::Test
 
     assert_kind_of Array, results
     assert_equal 3, results.length
-    assert results.all? { |chunks| chunks.is_a?(Array) }
+    assert(results.all?(Array))
   end
 
   def test_chunker_call_with_offsets
@@ -188,21 +188,21 @@ class SemchunkTest < Minitest::Test
     chunks = Semchunk.chunk(text, chunk_size: 3, token_counter: token_counter)
 
     assert_kind_of Array, chunks
-    assert chunks.length >= 2
+    assert_operator chunks.length, :>=, 2
     # Verify commas are preserved
-    assert chunks.any? { |chunk| chunk.include?(",") }
+    assert(chunks.any? { |chunk| chunk.include?(",") })
   end
 
   def test_character_level_splitting
     text = "abcdefghijklmnopqrstuvwxyz"
-    token_counter = ->(text) { text.length }
+    token_counter = lambda(&:length)
 
     chunks = Semchunk.chunk(text, chunk_size: 5, token_counter: token_counter)
 
     assert_kind_of Array, chunks
-    assert chunks.length >= 2
+    assert_operator chunks.length, :>=, 2
     chunks.each do |chunk|
-      assert token_counter.call(chunk) <= 5
+      assert_operator token_counter.call(chunk), :<=, 5
     end
   end
 end

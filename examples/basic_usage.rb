@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-require_relative "../lib/semchunk"
+require "semchunk"
 
 # Example 1: Basic chunking
 puts "=" * 60
@@ -21,7 +21,7 @@ chunks.each_with_index do |chunk, i|
 end
 
 # Example 2: Chunking with offsets
-puts "\n" + "=" * 60
+puts "\n#{'=' * 60}"
 puts "Example 2: Chunking with Offsets"
 puts "=" * 60
 
@@ -37,7 +37,7 @@ chunks.zip(offsets).each_with_index do |(chunk, (start_pos, end_pos)), i|
 end
 
 # Example 3: Overlapping chunks
-puts "\n" + "=" * 60
+puts "\n#{'=' * 60}"
 puts "Example 3: Overlapping Chunks"
 puts "=" * 60
 
@@ -54,7 +54,7 @@ chunks_overlap = Semchunk.chunk(text3, chunk_size: 4, token_counter: token_count
 chunks_overlap.each_with_index { |chunk, i| puts "  #{i + 1}. #{chunk}" }
 
 # Example 4: Using Chunkerify
-puts "\n" + "=" * 60
+puts "\n#{'=' * 60}"
 puts "Example 4: Using Chunkerify for Multiple Texts"
 puts "=" * 60
 
@@ -77,12 +77,12 @@ all_chunks.each_with_index do |doc_chunks, i|
 end
 
 # Example 5: Character-level chunking
-puts "\n" + "=" * 60
+puts "\n#{'=' * 60}"
 puts "Example 5: Character-Level Chunking"
 puts "=" * 60
 
 text5 = "abcdefghijklmnopqrstuvwxyz"
-char_counter = ->(text) { text.length }
+char_counter = lambda(&:length)
 
 chunks_chars = Semchunk.chunk(text5, chunk_size: 5, token_counter: char_counter)
 
@@ -93,6 +93,6 @@ chunks_chars.each_with_index do |chunk, i|
   puts "  #{i + 1}. #{chunk} (#{chunk.length} chars)"
 end
 
-puts "\n" + "=" * 60
+puts "\n#{'=' * 60}"
 puts "All examples completed!"
 puts "=" * 60
