@@ -52,39 +52,35 @@ Layout/SpaceAroundEqualsInParameterDefault:
   EnforcedStyle: no_space
 
 Metrics/AbcSize:
-  Max: 500
+  Enabled: false
   Exclude:
     - "test/**/*"
 
 Metrics/BlockLength:
-  Max: 100
+  Max: 50
   Exclude:
     - "*.gemspec"
     - "Rakefile"
 
 Metrics/ClassLength:
-  Max: 500
-  Exclude:
-    - "test/**/*"
+  Enabled: false
 
 Metrics/MethodLength:
-  Max: 200
+  Max: 50
   Exclude:
     - "test/**/*"
 
 Metrics/ModuleLength:
-  Max: 500
-  Exclude:
-    - "test/**/*"
+  Enabled: false
 
 Metrics/ParameterLists:
   Max: 10
 
 Metrics/PerceivedComplexity:
-  Max: 50
+  Enabled: false
 
 Metrics/CyclomaticComplexity:
-  Max: 50
+  Enabled: false
 
 Minitest/EmptyLineBeforeAssertionMethods:
   Enabled: false
