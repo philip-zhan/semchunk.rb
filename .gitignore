@@ -8,3 +8,14 @@
 /spec/reports/
 /tmp/
 /Gemfile.lock
+
+# Gem files
+*.gem
+
+# Python files (this is a Ruby gem, not a Python package)
+/semchunk/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
